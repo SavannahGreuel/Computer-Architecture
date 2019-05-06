@@ -139,53 +139,53 @@ void cpu_run(struct cpu *cpu)
         printf("%d\n", cpu->registers[operandA]);
         break;
 
-      // case MUL:
-      //   alu(cpu, ALU_MUL, operandA, operandB);
-      //   break;
+      case MUL:
+        alu(cpu, ALU_MUL, operandA, operandB);
+        break;
 
-      // case PUSH:
-      //   push_stack(cpu, cpu->registers[operandA]);
-      //   break;
+      case PUSH:
+        push_stack(cpu, cpu->registers[operandA]);
+        break;
 
-      // case POP:
-      //   cpu->registers[operandA] = pop_stack(cpu);
-      //   break;
+      case POP:
+        cpu->registers[operandA] = pop_stack(cpu);
+        break;
 
-      // case CALL:
-      //   push_stack(cpu, cpu->PC + 1);
-      //   cpu->PC = cpu->registers[operandA] - 1;
-      //   break;
+      case CALL:
+        push_stack(cpu, cpu->PC + 1);
+        cpu->PC = cpu->registers[operandA] - 1;
+        break;
 
-      // case RET:
-      //   cpu->PC = pop_stack(cpu);
-      //   break;
+      case RET:
+        cpu->PC = pop_stack(cpu);
+        break;
 
-      // case ADD:
-      //   alu(cpu, ALU_ADD, operandA, operandB);
-      //   break;
+      case ADD:
+        alu(cpu, ALU_ADD, operandA, operandB);
+        break;
 
-      // case CMP:
-      //   alu(cpu, ALU_CMP, operandA, operandB);
-      //   break;
+      case CMP:
+        alu(cpu, ALU_CMP, operandA, operandB);
+        break;
 
-      // case JMP:
-      //   cpu->PC = cpu->registers[operandA];
-      //   cpu->PC += 1;
-      //   break;
+      case JMP:
+        cpu->PC = cpu->registers[operandA];
+        cpu->PC += 1;
+        break;
 
-      // case JEQ:
-      //   if (cpu->FL == 1)
-      //   {
-      //     cpu->PC = cpu->registers[operandA];
-      //   }
-      //   break;
+      case JEQ:
+        if (cpu->FL == 1)
+        {
+          cpu->PC = cpu->registers[operandA];
+        }
+        break;
 
-      // case JNE:
-      //   if (cpu->FL != 1)
-      //   {
-      //     cpu->PC = cpu->registers[operandA];
-      //   }
-      //   break;
+      case JNE:
+        if (cpu->FL != 1)
+        {
+          cpu->PC = cpu->registers[operandA];
+        }
+        break;
 
       default:
         break;
