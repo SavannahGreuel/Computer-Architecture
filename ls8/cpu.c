@@ -56,14 +56,95 @@ void cpu_run(struct cpu *cpu)
 {
   int running = 1; // True until we get a HLT instruction
 
+  unsigned char operandA;
+  unsigned char operandB;
+
   while (running) {
     // TODO
     // 1. Get the value of the current instruction (in address PC).
+    unsigned char INSTRUCTIONS = cpu->ram[cpu->PC];
     // 2. Figure out how many operands this next instruction requires
+    unsigned int num_operands = INSTRUCTIONS >> 6;
     // 3. Get the appropriate value(s) of the operands following this instruction
+    if (num_operands == 2)
+    {
+      operandA = cpu_ram_read(cpu, (cpu->PC + 1) & 0xff);
+      operandB = cpu_ram_read(cpu, (cpu->PC + 2) & 0xff);
+
+    }
+    else if (num_operands == 1)
+    {
+      operandA = cpu_ram_read(cpu, (cpu->PC + 1) & 0xff);
+    }
     // 4. switch() over it to decide on a course of action.
+    switch (INSTRUCTIONS)
+    {
+      case HLT:
+        running = 0;
+        break;
+
+      case LDI:
+        cpu->registers[operandA] = operandB;
+        break;
+    
+      case PRN:
+        printf("%d\n", cpu->registers[operandA]);
+        break;
+
+      case MUL:
+        alu(cpu, ALU_MUL, operandA, operandB);
+        break;
+
+      case PUSH:
+        push_stack(cpu, cpu->registers[operandA]);
+        break;
+
+      case POP:
+        cpu->registers[operandA] = pop_stack(cpu);
+        break;
+
+      case CALL:
+        push_stack(cpu, cpu->PC + 1);
+        cpu->PC = cpu->registers[operandA] - 1;
+        break;
+
+      case RET:
+        cpu->PC = pop_stack(cpu);
+        break;
+
+      case ADD:
+        alu(cpu, ALU_ADD, operandA, operandB);
+        break;
+
+      case CMP:
+        alu(cpu, ALU_CMP, operandA, operandB);
+        break;
+
+      case JMP:
+        cpu->PC = cpu->registers[operandA];
+        cpu->PC += 1;
+        break;
+
+      case JEQ:
+        if (cpu->FL == 1)
+        {
+          cpu->PC = cpu->registers[operandA];
+        }
+        break;
+
+      case JNE:
+        if (cpu->FL != 1)
+        {
+          cpu->PC = cpu->registers[operandA];
+        }
+        break;
+
+      default:
+        break;
+    }
     // 5. Do whatever the instruction should do according to the spec.
     // 6. Move the PC to the next instruction.
+    cpu->PC +=num_operands + 1;
   }
 }
 
