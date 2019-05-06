@@ -1,29 +1,48 @@
 #include "cpu.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define DATA_LEN 6
 
 /**
  * Load the binary bytes from a .ls8 source file into a RAM array
  */
-void cpu_load(struct cpu *cpu)
+void cpu_load(struct cpu *cpu, int argc, char *argv[])
 {
-  char data[DATA_LEN] = {
-    // From print8.ls8
-    0b10000010, // LDI R0,8
-    0b00000000,
-    0b00001000,
-    0b01000111, // PRN R0
-    0b00000000,
-    0b00000001  // HLT
-  };
-
-  int address = 0;
-
-  for (int i = 0; i < DATA_LEN; i++) {
-    cpu->ram[address++] = data[i];
+  if (argc < 2)
+  {
+    printf("File does not exits \n");
+    exit(1);
   }
 
-  // TODO: Replace this with something less hard-coded
+  char *file = argv[1];
+  FILE *fp = fopen(file, "r");
+
+  if (fp == NULL)
+  {
+    printf("File does not exist \n");
+    exit(1);
+  }
+  else {
+    char file_line[1024];
+    int address = 0;
+    while (fgets(file_line, sizeof(file_line), fp) != NULL)
+    {
+      char *endptr;
+      unsigned char val = strtol(file_line, &endptr, 2);
+
+      if (file_line == NULL)
+      {
+        continue;
+      }
+
+      cpu->ram[address] = val;
+      address++;
+    }
+
+  }
+  fclose(fp);
 }
 
 unsigned char cpu_ram_read(struct cpu *cpu, unsigned char index) 
@@ -42,12 +61,41 @@ void alu(struct cpu *cpu, enum alu_op op, unsigned char regA, unsigned char regB
 {
   switch (op) {
     case ALU_MUL:
-      // TODO
+      cpu->registers[regA] = cpu->registers[regA] * cpu->registers[regB];
       break;
 
-    // TODO: implement more ALU ops
+    case ALU_ADD:
+      cpu->registers[regA] = cpu->registers[regA] + cpu->registers[regB];
+      break;
+
+    case ALU_CMP:
+      if(cpu->registers[regA] == cpu->registers[regB])
+      {
+        cpu->FL = 1;
+      }
+      else if(cpu->registers[regA] > cpu->registers[regB])
+      {
+        cpu->FL = 0;
+      }
+
+      break;
   }
 }
+
+void push_stack(struct cpu *cpu, int val)
+{
+  cpu->registers[7]--;
+  cpu_ram_write(cpu, cpu->registers[7], val);
+}
+
+unsigned char pop_stack(struct cpu *cpu)
+{
+  unsigned char val = cpu->ram[cpu->registers[7]];
+  cpu->registers[7]++;
+  return val;
+}
+    // TODO: implement more ALU ops
+  
 
 /**
  * Run the CPU
@@ -91,53 +139,53 @@ void cpu_run(struct cpu *cpu)
         printf("%d\n", cpu->registers[operandA]);
         break;
 
-      case MUL:
-        alu(cpu, ALU_MUL, operandA, operandB);
-        break;
+      // case MUL:
+      //   alu(cpu, ALU_MUL, operandA, operandB);
+      //   break;
 
-      case PUSH:
-        push_stack(cpu, cpu->registers[operandA]);
-        break;
+      // case PUSH:
+      //   push_stack(cpu, cpu->registers[operandA]);
+      //   break;
 
-      case POP:
-        cpu->registers[operandA] = pop_stack(cpu);
-        break;
+      // case POP:
+      //   cpu->registers[operandA] = pop_stack(cpu);
+      //   break;
 
-      case CALL:
-        push_stack(cpu, cpu->PC + 1);
-        cpu->PC = cpu->registers[operandA] - 1;
-        break;
+      // case CALL:
+      //   push_stack(cpu, cpu->PC + 1);
+      //   cpu->PC = cpu->registers[operandA] - 1;
+      //   break;
 
-      case RET:
-        cpu->PC = pop_stack(cpu);
-        break;
+      // case RET:
+      //   cpu->PC = pop_stack(cpu);
+      //   break;
 
-      case ADD:
-        alu(cpu, ALU_ADD, operandA, operandB);
-        break;
+      // case ADD:
+      //   alu(cpu, ALU_ADD, operandA, operandB);
+      //   break;
 
-      case CMP:
-        alu(cpu, ALU_CMP, operandA, operandB);
-        break;
+      // case CMP:
+      //   alu(cpu, ALU_CMP, operandA, operandB);
+      //   break;
 
-      case JMP:
-        cpu->PC = cpu->registers[operandA];
-        cpu->PC += 1;
-        break;
+      // case JMP:
+      //   cpu->PC = cpu->registers[operandA];
+      //   cpu->PC += 1;
+      //   break;
 
-      case JEQ:
-        if (cpu->FL == 1)
-        {
-          cpu->PC = cpu->registers[operandA];
-        }
-        break;
+      // case JEQ:
+      //   if (cpu->FL == 1)
+      //   {
+      //     cpu->PC = cpu->registers[operandA];
+      //   }
+      //   break;
 
-      case JNE:
-        if (cpu->FL != 1)
-        {
-          cpu->PC = cpu->registers[operandA];
-        }
-        break;
+      // case JNE:
+      //   if (cpu->FL != 1)
+      //   {
+      //     cpu->PC = cpu->registers[operandA];
+      //   }
+      //   break;
 
       default:
         break;
